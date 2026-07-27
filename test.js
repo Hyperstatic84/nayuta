@@ -15,7 +15,7 @@ function verifier(nom, condition, detail) {
 
 console.log("Dialecte Macabre — tests\n");
 
-// Déterminisme : même entrée, même prophétie.
+// Déterminisme : même entrée, même litanie.
 {
   const a = Nayuta.convertir("Bonjour, veux-tu manger avec moi demain ?", 2, 0);
   const b = Nayuta.convertir("Bonjour, veux-tu manger avec moi demain ?", 2, 0);
@@ -24,95 +24,77 @@ console.log("Dialecte Macabre — tests\n");
 
 // La variante change la formulation (reformuler).
 {
-  const a = Nayuta.convertir("Bonjour mon ami !", 2, 0);
-  const b = Nayuta.convertir("Bonjour mon ami !", 2, 1);
-  verifier("la variante produit une autre formulation", a.texte !== b.texte);
+  const a = Nayuta.convertir("Bonjour, veux-tu manger avec moi demain ?", 2, 0);
+  const b = Nayuta.convertir("Bonjour, veux-tu manger avec moi demain ?", 2, 1);
+  verifier("la variante produit une autre litanie", a.texte !== b.texte);
 }
 
-// Substitutions lexicales de base, casse préservée.
+// Litanie, pas phrase : seulement des mots séparés par « … », sans ponctuation.
 {
-  const r = Nayuta.convertir("Bonjour", 1, 0).texte;
+  const r = Nayuta.convertir("Je vais à la maison demain !", 1, 0).texte;
+  verifier("la sortie est une suite de mots séparés par « … »", /^([^\s…]+… )*[^\s…]+…$/u.test(r), r);
+  verifier("aucune ponctuation de phrase ne subsiste", !/[,.!?;:]/.test(r), r);
+}
+
+// Les mots-outils sont écartés de la litanie.
+{
+  const r = Nayuta.convertir("viens avec moi dans la maison", 1, 0).texte;
+  const mots = r.split("… ").map((m) => m.replace(/…$/, ""));
   verifier(
-    "« Bonjour » devient une salutation funeste avec majuscule",
-    /^(Sombres salutations|Que les ténèbres te trouvent|Salutations, futur cadavre)…$/.test(r),
+    "les mots-outils (avec, moi, dans, la) sont ignorés",
+    !mots.includes("avec") && !mots.includes("moi") && !mots.includes("dans") && !mots.includes("la"),
     r
   );
 }
 
-// Les expressions longues priment sur les mots courts.
+// Correspondance thématique : « manger » donne un mot du champ de la dévoration.
 {
-  const r = Nayuta.convertir("bonne nuit", 1, 0).texte;
-  verifier(
-    "« bonne nuit » est traité comme une expression entière",
-    !r.includes("digne d'un dernier festin"),
-    r
-  );
+  const r = Nayuta.convertir("manger", 1, 0).texte;
+  verifier("« manger » est traduit dans son thème funeste", /(dévorer|chair|festin)/.test(r), r);
 }
 
-// Mots accentués : les bornes de mots ne coupent pas « école ».
+// Dictionnaire cohérent : un même mot donne toujours la même traduction.
 {
-  const r = Nayuta.convertir("Je vais à l'école", 1, 0).texte;
-  verifier("« école » est bien substitué malgré l'accent", !r.includes("école"), r);
+  const r = Nayuta.convertir("maison maison", 1, 0).texte;
+  const mots = r.split("… ").map((m) => m.replace(/…$/, ""));
+  verifier("un même mot est toujours traduit pareil", mots[0] === mots[1], r);
 }
 
-// Un mot contenu dans un autre n'est pas substitué (« mange » dans « manger »).
+// Une litanie compte au moins trois mots, même si tout est mot-outil.
 {
-  const r = Nayuta.convertir("démangeaison", 1, 0).texte;
-  verifier("pas de substitution au milieu d'un mot", r.startsWith("démangeaison"), r);
+  const r = Nayuta.convertir("toi et moi", 1, 0).texte;
+  verifier("au moins trois mots dans la litanie", r.split("… ").length >= 3, r);
 }
 
-// Niveau 2 : interjection d'ouverture et ponctuation funeste.
-{
-  const r = Nayuta.convertir("Tu viens ?", 2, 0);
-  verifier("niveau 2 : un segment funeste ouvre la prophétie", r.segments[0].doom === true);
-  verifier("niveau 2 : la question exige une réponse", /\?!/.test(r.texte), r.texte);
-}
-
-// Niveau 3 : sentence finale de ruine.
-{
-  const r = Nayuta.convertir("Il fait beau.", 3, 0);
-  const dernier = r.segments[r.segments.length - 1];
-  verifier("niveau 3 : une sentence finale funeste est ajoutée", dernier.doom === true && dernier.texte.includes("☠"));
-}
-
-// Niveau 1 : aucune interjection ni sentence, juste le lexique.
-{
-  const r = Nayuta.convertir("Le chat dort.", 1, 0);
-  verifier("niveau 1 : un seul segment, sans ajout funeste", r.segments.length === 1 && !r.segments[0].doom);
-}
-
-// Pas de cascade : le texte issu d'une substitution n'est pas re-substitué.
-{
-  const r = Nayuta.convertir("bonne nuit", 1, 0).texte;
-  verifier(
-    "les remplacements ne sont pas eux-mêmes re-substitués",
-    !/chétive|délivrance annoncée|illusion de mortel/.test(r),
-    r
-  );
-}
-
-// Les inversions à trait d'union restent entières (« veux-tu »).
+// « veux-tu » : la partie porteuse de sens est traduite, le pronom écarté.
 {
   const r = Nayuta.convertir("veux-tu venir", 1, 0).texte;
-  verifier("« veux-tu » n'est pas découpé au trait d'union", r.startsWith("veux-tu"), r);
+  verifier("« veux-tu » livre le thème du désir", /(faim|exigence)/.test(r), r);
 }
 
-// L'apostrophe typographique est reconnue.
+// L'apostrophe typographique est reconnue (« aujourd’hui »).
 {
   const r = Nayuta.convertir("aujourd’hui", 1, 0).texte;
-  verifier("« aujourd’hui » (apostrophe courbe) est substitué", !r.includes("aujourd"), r);
+  verifier("« aujourd’hui » est traduit comme un tout", /(agonie|sursis)/.test(r), r);
 }
 
-// Niveau 3 : pas de double ☠ quand la phrase se termine déjà par ☠.
+// Niveau 1 : murmure — tout en minuscules, sans ricanement ni ☠.
 {
-  const r = Nayuta.convertir("Bonne nuit tout le monde !", 3, 0).texte;
-  verifier("pas de ☠ doublé avant la sentence finale", !r.includes("☠ ☠"), r);
+  const r = Nayuta.convertir("Bonjour, veux-tu manger avec moi demain ?", 1, 0);
+  verifier("niveau 1 : litanie murmurée en minuscules", r.texte === r.texte.toLowerCase(), r.texte);
+  verifier("niveau 1 : aucun segment funeste", r.segments.every((s) => !s.doom));
 }
 
-// Texte sans aucun mot du lexique : sort intact (plus l'ellipse).
+// Niveau 3 : sentence finale hurlée et ☠ terminal.
 {
-  const r = Nayuta.convertir("xylophone", 1, 0).texte;
-  verifier("un mot inconnu traverse la conversion", r === "xylophone…", r);
+  const r = Nayuta.convertir("Bonjour, veux-tu manger avec moi demain ?", 3, 0);
+  verifier(
+    "niveau 3 : la sentence finale scelle la litanie",
+    /(MOURREZ… TOUS|MORT… MORT… MORT|LA FIN… VIENT|LE MONDE… PÉRIRA)… ☠$/.test(r.texte),
+    r.texte
+  );
+  const dernier = r.segments[r.segments.length - 1];
+  verifier("niveau 3 : le dernier segment est funeste", dernier.doom === true && dernier.texte === "☠");
 }
 
 console.log(echecs === 0 ? "\nTous les tests passent. Le monde peut périr en paix." : `\n${echecs} test(s) en échec.`);

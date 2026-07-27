@@ -1,18 +1,28 @@
 /*
  * Dialecte Macabre — moteur de conversion.
  *
- * Transforme une phrase française ordinaire dans le parler apocalyptique de
- * Nayuta, l'enfant cornue de la nouvelle « La Prophétie de Nayuta » de
- * Tatsuki Fujimoto.
+ * Transfigure une phrase française ordinaire dans le parler de Nayuta,
+ * l'enfant cornue de la nouvelle « La Prophétie de Nayuta » de Tatsuki
+ * Fujimoto. Fidèle à la version française : Nayuta ne construit pas de
+ * phrases — elle égrène une litanie de mots macabres, sans syntaxe.
  *
- * La conversion est déterministe : une même phrase, au même niveau et à la
- * même variante, produit toujours la même prophétie. Le bouton « Reformuler »
- * incrémente la variante pour tirer une autre formulation.
+ *   « Bonjour, veux-tu manger avec moi demain ? »
+ *   → « ténèbres… faim… chair… jugement… »
+ *
+ * Chaque mot porteur de sens de la phrase d'origine est traduit vers un mot
+ * funeste : par correspondance thématique quand le concept est connu, sinon
+ * par un tirage déterministe dans le vocabulaire général — un même mot
+ * français donne donc toujours la même « traduction », comme un vrai
+ * dictionnaire. Les mots-outils (articles, pronoms…) sont ignorés : la
+ * grammaire est une faiblesse de mortel.
+ *
+ * La conversion est déterministe : même phrase, même niveau, même variante
+ * produisent la même litanie. « Reformuler » incrémente la variante.
  *
  * Niveaux d'intensité :
- *   1 — Murmure      : substitutions lexicales seulement.
- *   2 — Malédiction  : + interjections, ponctuation funeste, apartés.
- *   3 — Apocalypse   : + sentence finale de ruine, emphase en majuscules, ☠.
+ *   1 — Murmure      : litanie basse, tout en minuscules.
+ *   2 — Malédiction  : ricanement d'ouverture, mots hurlés en majuscules.
+ *   3 — Apocalypse   : mots funestes surnuméraires, ☠, sentence finale.
  */
 
 const Nayuta = (() => {
@@ -32,7 +42,7 @@ const Nayuta = (() => {
     return h >>> 0;
   }
 
-  // Générateur mulberry32 : rapide, suffisant pour choisir des formules.
+  // Générateur mulberry32 : rapide, suffisant pour choisir des mots.
   function creerAlea(graine) {
     let a = graine >>> 0;
     return function () {
@@ -49,241 +59,238 @@ const Nayuta = (() => {
   }
 
   /* ------------------------------------------------------------------ */
-  /* Lexique macabre                                                     */
+  /* Vocabulaire du dialecte                                             */
   /* ------------------------------------------------------------------ */
 
-  // Chaque entrée : motif (insensible à la casse, bornes de mots) → variantes.
-  // Les motifs les plus longs sont testés en premier pour éviter qu'un mot
-  // court ne « vole » une expression entière (ex. « bonne nuit » avant « nuit »).
-  const LEXIQUE = [
-    ["bonne nuit", ["que les cauchemars te bercent", "sombre dans la petite mort du sommeil"]],
-    ["s'il te plaît", ["si tu tiens à ton âme", "avant que ma patience ne pourrisse"]],
-    ["s'il vous plaît", ["si vous tenez à vos âmes", "avant que ma patience ne pourrisse"]],
-    ["tout le monde", ["chaque mortel condamné", "toutes les âmes promises au néant"]],
-    ["au revoir", ["retourne au néant", "que la poussière te reprenne"]],
-    ["bonjour", ["sombres salutations", "que les ténèbres te trouvent", "salutations, futur cadavre"]],
-    ["bonsoir", ["que le crépuscule t'engloutisse", "sinistres salutations vespérales"]],
-    ["salut", ["sombres salutations", "salutations, chair périssable"]],
-    ["merci", ["ta servitude est notée", "les ténèbres retiendront ton offrande"]],
-    ["oui", ["ainsi soit la ruine", "qu'il en soit ainsi, jusqu'à la fin"]],
-    ["non", ["jamais, même dans la mort", "plutôt le néant"]],
-    ["demain", ["à l'aube du Jugement", "quand le monde aura encore pourri d'un jour"]],
-    ["aujourd'hui", ["en ce jour de ruine", "en cette ère agonisante"]],
-    ["hier", ["au temps où le monde respirait encore", "dans les cendres d'avant"]],
-    ["toujours", ["jusqu'à l'extinction des étoiles", "tant que la ruine durera"]],
-    ["jamais", ["pas même quand les étoiles s'éteindront", "jamais, ni en ce monde ni dans ses cendres"]],
-    ["manger", ["dévorer", "engloutir comme la tombe engloutit"]],
-    ["mange", ["dévore", "engloutis"]],
-    ["mangé", ["dévoré", "englouti"]],
-    ["boire", ["s'abreuver aux dernières sources du monde"]],
-    ["dormir", ["gésir dans la petite mort", "sombrer dans les limbes"]],
-    ["maison", ["crypte", "tanière funèbre", "sanctuaire de l'enfant cornue"]],
-    ["école", ["sanctuaire des âmes perdues", "purgatoire des jeunes mortels"]],
-    ["travail", ["labeur sépulcral", "servitude terrestre"]],
-    ["travailler", ["s'user jusqu'à l'os", "servir en attendant la fin"]],
-    ["argent", ["poussière que les morts n'emportent pas", "métal des vivants naïfs"]],
-    ["amis", ["âmes condamnées", "compagnons de ruine", "futures ombres"]],
-    ["amie", ["âme condamnée", "compagne de ruine"]],
-    ["ami", ["âme condamnée", "compagnon de ruine", "future ombre"]],
-    ["famille", ["lignée maudite", "sang partagé avant la fin"]],
-    ["frère", ["frère de malédiction", "gardien de l'enfant cornue"]],
-    ["sœur", ["sœur de malédiction"]],
-    ["soeur", ["sœur de malédiction"]],
-    ["enfants", ["progénitures du crépuscule", "petites âmes en sursis"]],
-    ["enfant", ["progéniture du crépuscule", "petite âme en sursis"]],
-    ["gens", ["mortels", "âmes en sursis", "foule promise au néant"]],
-    ["personnes", ["âmes en sursis", "mortels"]],
-    ["monde", ["monde condamné", "monde agonisant", "monde promis à ma main"]],
-    ["ville", ["nécropole en devenir", "cité aux fondations de cendre"]],
-    ["soleil", ["astre agonisant", "brasier moribond du ciel"]],
-    ["lune", ["œil blafard des ténèbres", "lanterne des trépassés"]],
-    ["étoiles", ["braises mourantes du firmament"]],
-    ["ciel", ["voûte qui s'effondrera", "linceul céleste"]],
-    ["pluie", ["larmes du ciel condamné"]],
-    ["fleurs", ["efflorescences du dernier jour", "fleurs écloses sur les ruines"]],
-    ["fleur", ["efflorescence du dernier jour", "fleur éclose sur les ruines"]],
-    ["chien", ["cerbère domestique", "limier des limbes"]],
-    ["chat", ["spectre félin", "familier des ténèbres"]],
-    ["oiseau", ["charognard en habit de fête"]],
-    ["beau", ["funeste", "d'une splendeur sépulcrale"]],
-    ["belle", ["funeste", "d'une splendeur sépulcrale"]],
-    ["joli", ["délicieusement funèbre"]],
-    ["jolie", ["délicieusement funèbre"]],
-    ["bien", ["conformément à la prophétie"]],
-    ["bon", ["digne d'un dernier festin"]],
-    ["bonne", ["digne d'un dernier festin"]],
-    ["heureux", ["repu de désolation", "comblé comme un charnier"]],
-    ["heureuse", ["repue de désolation", "comblée comme un charnier"]],
-    ["content", ["repu de désolation"]],
-    ["contente", ["repue de désolation"]],
-    ["triste", ["rongé par le crépuscule"]],
-    ["peur", ["l'effroi qui précède la fin", "la juste terreur des mortels"]],
-    ["aimer", ["vouer un culte funèbre à"]],
-    ["adore", ["voue un culte funèbre à"]],
-    ["aime", ["voue un culte funèbre à"]],
-    ["veux", ["exige, par les cornes de la fin,"]],
-    ["voudrais", ["exigerais, si le monde durait assez,"]],
-    ["vite", ["plus vite que la fin ne vient"]],
-    ["dodo", ["repos sépulcral"]],
-    ["bisous", ["morsures affectueuses"]],
-    ["gâteau", ["offrande sucrée du condamné"]],
-    ["chocolat", ["ténèbres comestibles"]],
-    ["café", ["décoction noire comme l'abîme"]],
-    ["eau", ["eau des dernières sources"]],
-    ["nuit", ["longue répétition du néant"]],
-    ["matin", ["sursis d'aube"]],
-    ["vacances", ["trêve avant l'anéantissement"]],
-    ["fête", ["danse macabre", "dernier banquet"]],
-    ["musique", ["thrène", "chant du glas"]],
-    ["chanson", ["complainte funèbre"]],
-    ["dieu", ["celui qui a détourné les yeux"]],
-    ["merde", ["excrément du destin"]],
-    ["super", ["digne des dernières splendeurs"]],
-    ["génial", ["glorieusement funeste"]],
-    ["petit", ["chétif comme un espoir humain"]],
-    ["petite", ["chétive comme un espoir humain"]],
-    ["grand", ["vaste comme le néant"]],
-    ["grande", ["vaste comme le néant"]],
-    ["vivre", ["s'attarder parmi les condamnés"]],
-    ["mourir", ["rejoindre enfin la grande promesse"]],
-    ["mort", ["délivrance annoncée"]],
-    ["vie", ["brève étincelle avant l'obscur"]],
-    ["amour", ["attachement de condamnés"]],
-    ["espoir", ["douce illusion de mortel"]],
-    ["avenir", ["compte à rebours"]],
-    ["problème", ["présage"]],
-    ["chance", ["sursis accordé par la fin"]],
+  // Fonds général : les mots inconnus du thésaurus y puisent leur traduction.
+  const VOCABULAIRE = [
+    "mort", "sang", "cadavre", "ténèbres", "ruine", "cendre", "ossements",
+    "charogne", "néant", "pourriture", "crâne", "tombe", "glas", "abîme",
+    "fléau", "vermine", "agonie", "supplice", "crépuscule", "malédiction",
+    "damnation", "sépulcre", "linceul", "spectre", "corbeau", "peste",
+    "carnage", "massacre", "désolation", "extinction", "trépas", "entrailles",
+    "fange", "asticots", "griffes", "cornes", "hurlement", "gouffre",
+    "cauchemar", "effroi", "lamentation", "brasier", "poussière", "froid",
+    "silence", "oubli", "déluge", "famine", "chair", "fosse", "tourment",
   ];
 
-  // Compilation en un unique motif alterné, appliqué en une seule passe :
-  // ainsi le texte issu d'une substitution n'est jamais re-substitué par une
-  // règle suivante (pas de cascade). Bornes de mots compatibles avec les
-  // lettres accentuées (\b de JS échoue sur « é », « ï », etc.) ; le trait
-  // d'union compte comme une lettre pour ne pas découper « veux-tu ».
-  const LETTRE = "A-Za-zÀ-ÖØ-öø-ÿŒœ\\-";
-  const PAR_MOTIF = new Map(LEXIQUE.map(([motif, variantes]) => [motif, variantes]));
-  const MOTIF_GLOBAL = (() => {
-    const alternation = LEXIQUE
-      .map(([motif]) => motif)
-      .sort((a, b) => b.length - a.length)
-      .map((motif) => motif.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
-      .join("|");
-    return new RegExp(`(^|[^${LETTRE}])(${alternation})(?=[^${LETTRE}]|$)`, "giu");
-  })();
+  // Thésaurus : concepts français connus → mots funestes apparentés.
+  const THEMES = new Map(Object.entries({
+    "bonjour": ["ténèbres", "glas", "effroi"],
+    "bonsoir": ["crépuscule", "ténèbres"],
+    "salut": ["effroi", "ossements"],
+    "coucou": ["spectre", "effroi"],
+    "merci": ["offrande", "servitude"],
+    "pardon": ["repentir", "supplice"],
+    "désolé": ["repentir", "supplice"],
+    "revoir": ["adieux", "néant"],
+    "oui": ["fatalité", "soumission"],
+    "non": ["refus", "néant"],
+    "manger": ["dévorer", "chair", "festin"], "mange": ["dévorer", "chair", "festin"],
+    "mangé": ["dévorer", "chair", "festin"], "nourriture": ["chair", "festin"],
+    "faim": ["dévorer", "famine"], "repas": ["festin", "chair"],
+    "boire": ["sang", "fiel"], "bois": ["sang", "fiel"], "soif": ["sang", "fiel"],
+    "maison": ["crypte", "tombeau", "tanière"], "chez": ["crypte", "tanière"],
+    "école": ["purgatoire", "limbes"],
+    "travail": ["labeur", "chaînes", "servitude"], "travaille": ["labeur", "chaînes"],
+    "travailler": ["labeur", "chaînes"], "boulot": ["labeur", "servitude"],
+    "argent": ["poussière", "avarice"],
+    "ami": ["charogne", "ombre", "proie"], "amie": ["charogne", "ombre", "proie"],
+    "amis": ["charognes", "ombres", "proies"], "amies": ["charognes", "ombres"],
+    "copain": ["charogne", "proie"], "copine": ["charogne", "proie"],
+    "famille": ["lignée", "sang"], "parents": ["lignée", "sang"],
+    "frère": ["lignée", "sang"], "sœur": ["lignée", "sang"], "soeur": ["lignée", "sang"],
+    "enfant": ["progéniture", "larve"], "enfants": ["progénitures", "larves"],
+    "bébé": ["progéniture", "larve"],
+    "gens": ["vermine", "troupeau"], "personnes": ["vermine", "troupeau"],
+    "foule": ["vermine", "troupeau"],
+    "monde": ["ruine", "apocalypse", "fin"],
+    "ville": ["nécropole", "décombres"], "rue": ["nécropole", "décombres"],
+    "soleil": ["brasier", "agonie"], "jour": ["brasier", "agonie"],
+    "journée": ["agonie", "sursis"], "matin": ["brasier", "sursis"],
+    "lune": ["spectre", "linceul"], "nuit": ["ténèbres", "linceul"],
+    "soir": ["crépuscule", "ténèbres"], "soirée": ["crépuscule", "ténèbres"],
+    "étoile": ["braises", "vide"], "étoiles": ["braises", "vide"],
+    "ciel": ["voûte", "vide"],
+    "pluie": ["larmes", "déluge"], "eau": ["noyade", "déluge"], "mer": ["noyade", "abysses"],
+    "fleur": ["flétrissure", "épines"], "fleurs": ["flétrissures", "épines"],
+    "jardin": ["flétrissure", "épines"],
+    "chien": ["cerbère", "crocs"], "chat": ["spectre", "griffes"],
+    "chats": ["spectres", "griffes"],
+    "oiseau": ["charognard", "corbeau"], "oiseaux": ["charognards", "corbeaux"],
+    "beau": ["funeste", "sépulcral"], "belle": ["funeste", "sépulcrale"],
+    "joli": ["funeste", "sépulcral"], "jolie": ["funeste", "sépulcrale"],
+    "magnifique": ["funeste", "sépulcral"],
+    "bien": ["fatal", "funèbre"], "bon": ["fatal", "funèbre"],
+    "bonne": ["fatale", "funèbre"], "super": ["fatal", "funèbre"],
+    "génial": ["fatal", "funèbre"], "cool": ["fatal", "funèbre"],
+    "heureux": ["désolation", "charnier"], "heureuse": ["désolation", "charnier"],
+    "content": ["désolation", "charnier"], "contente": ["désolation", "charnier"],
+    "joie": ["désolation", "charnier"], "bonheur": ["désolation", "charnier"],
+    "triste": ["lamentation", "complainte"], "tristesse": ["lamentation", "complainte"],
+    "pleure": ["lamentation", "larmes"], "pleurer": ["lamentation", "larmes"],
+    "peur": ["effroi", "terreur"], "effrayant": ["effroi", "terreur"],
+    "aime": ["morsure", "possession", "dévotion"], "aimes": ["morsure", "possession"],
+    "aimer": ["morsure", "possession", "dévotion"], "amour": ["morsure", "possession"],
+    "adore": ["dévotion", "possession"], "adorer": ["dévotion", "possession"],
+    "veux": ["faim", "exigence"], "veut": ["faim", "exigence"],
+    "voudrais": ["faim", "exigence"], "envie": ["faim", "exigence"],
+    "désir": ["faim", "exigence"],
+    "dors": ["gésir", "limbes"], "dormir": ["gésir", "limbes"],
+    "dodo": ["gésir", "limbes"], "sommeil": ["limbes", "cauchemar"],
+    "rêve": ["cauchemar", "limbes"], "rêves": ["cauchemars", "limbes"],
+    "demain": ["jugement", "échéance"], "futur": ["jugement", "échéance"],
+    "avenir": ["jugement", "échéance"],
+    "aujourd'hui": ["agonie", "sursis"],
+    "hier": ["cendres", "oubli"], "passé": ["cendres", "oubli"],
+    "mourir": ["trépas", "massacre"], "mort": ["trépas", "charnier"],
+    "morte": ["trépas", "charnier"], "meurt": ["trépas", "massacre"],
+    "meurs": ["trépas", "massacre"], "tuer": ["massacre", "carnage"],
+    "tue": ["massacre", "carnage"],
+    "vie": ["sursis", "étincelle"], "vivre": ["sursis", "étincelle"],
+    "vivant": ["sursis", "étincelle"], "vis": ["sursis", "étincelle"],
+    "espoir": ["illusion", "mirage"], "chance": ["illusion", "mirage"],
+    "dieu": ["abandon", "silence"], "dieux": ["abandon", "silence"],
+    "fête": ["sarabande", "banquet"], "anniversaire": ["sarabande", "banquet"],
+    "noël": ["sarabande", "banquet"],
+    "musique": ["thrène", "complainte"], "chanson": ["thrène", "complainte"],
+    "chante": ["thrène", "glas"], "chanter": ["thrène", "glas"],
+    "gâteau": ["offrande", "festin"], "chocolat": ["offrande", "festin"],
+    "bonbon": ["offrande", "festin"], "bonbons": ["offrandes", "festin"],
+    "sucre": ["offrande", "festin"],
+    "café": ["fiel", "abîme"], "thé": ["fiel", "abîme"],
+    "vacances": ["trêve", "sursis"], "repos": ["trêve", "sursis"],
+    "pause": ["trêve", "sursis"],
+    "problème": ["présage", "fléau"], "problèmes": ["présages", "fléaux"],
+    "souci": ["présage", "fléau"], "soucis": ["présages", "fléaux"],
+    "merde": ["fange", "excréments"], "putain": ["fange", "excréments"],
+    "petit": ["larve", "miettes"], "petite": ["larve", "miettes"],
+    "petits": ["larves", "miettes"], "petites": ["larves", "miettes"],
+    "grand": ["colosse", "gouffre"], "grande": ["colosse", "gouffre"],
+    "grands": ["colosses", "gouffres"], "grandes": ["colosses", "gouffres"],
+    "vite": ["hâte", "fuite"], "rapide": ["hâte", "fuite"],
+    "bisou": ["morsure", "étreinte"], "bisous": ["morsures", "étreinte"],
+    "câlin": ["étreinte", "morsure"],
+  }));
 
-  // Restitue la casse du mot d'origine sur son remplacement.
-  function appliquerCasse(original, remplacement) {
-    if (original === original.toUpperCase() && original.length > 1) {
-      return remplacement.toUpperCase();
+  // Mots-outils ignorés : Nayuta ne s'abaisse pas à la grammaire.
+  const MOTS_VIDES = new Set([
+    "le", "la", "les", "l", "un", "une", "des", "de", "du", "d", "au", "aux",
+    "et", "ou", "or", "ni", "car", "mais", "donc", "a", "à", "en", "dans",
+    "sur", "sous", "vers", "avec", "sans", "pour", "par", "entre", "chez",
+    "que", "qu", "qui", "quoi", "dont", "où", "quand", "comme", "si",
+    "je", "j", "tu", "il", "elle", "on", "nous", "vous", "ils", "elles",
+    "me", "m", "te", "t", "se", "s", "moi", "toi", "lui", "leur", "eux", "y",
+    "mon", "ma", "mes", "ton", "ta", "tes", "son", "sa", "ses",
+    "notre", "nos", "votre", "vos", "leurs",
+    "ce", "c", "cet", "cette", "ces", "ça", "cela", "ceci",
+    "est", "es", "suis", "sommes", "êtes", "sont", "être", "était", "sera",
+    "ai", "as", "avons", "avez", "ont", "avoir", "avait", "aura",
+    "ne", "n", "pas", "plus", "très", "trop", "peu", "aussi", "alors",
+    "tout", "tous", "toute", "toutes", "autre", "autres", "même", "encore",
+  ]);
+
+  // Sentences finales du niveau Apocalypse — toujours hurlées.
+  const FINALES = [
+    ["MOURREZ", "TOUS"],
+    ["MORT", "MORT", "MORT"],
+    ["LA FIN", "VIENT"],
+    ["LE MONDE", "PÉRIRA"],
+  ];
+
+  /* ------------------------------------------------------------------ */
+  /* Découpage et traduction                                             */
+  /* ------------------------------------------------------------------ */
+
+  const LETTRE = "A-Za-zÀ-ÖØ-öø-ÿŒœ";
+  const REGEX_MOT = new RegExp(`[${LETTRE}][${LETTRE}'-]*`, "gu");
+
+  // Extrait les mots porteurs de sens, en minuscules, mots-outils écartés.
+  // Un mot composé inconnu du thésaurus (« veux-tu ») est éclaté en parties.
+  function extraireMots(texte) {
+    const brut = texte.replace(/’/g, "'").toLowerCase();
+    const tokens = brut.match(REGEX_MOT) || [];
+    const mots = [];
+    for (const token of tokens) {
+      if (THEMES.has(token)) {
+        mots.push(token);
+        continue;
+      }
+      for (const part of token.split(/['-]/)) {
+        if (part && !MOTS_VIDES.has(part)) mots.push(part);
+      }
     }
-    if (original[0] === original[0].toUpperCase()) {
-      return remplacement.charAt(0).toUpperCase() + remplacement.slice(1);
-    }
-    return remplacement;
+    return mots;
   }
 
-  /* ------------------------------------------------------------------ */
-  /* Formules prophétiques                                               */
-  /* ------------------------------------------------------------------ */
-
-  const INTERJECTIONS = [
-    "Kekeke…",
-    "Écoute, mortel :",
-    "La prophétie l'a dit :",
-    "Par mes cornes,",
-    "Tremble, vermine :",
-    "Les entrailles du monde murmurent :",
-    "Ainsi grince la fin :",
-  ];
-
-  const APARTES = [
-    " — et les corbeaux approuvent — ",
-    " — le glas sonne déjà — ",
-    " — la terre s'en souviendra — ",
-    " — les ombres en témoignent — ",
-  ];
-
-  const SENTENCES_FINALES = [
-    "Et le monde périra.",
-    "Ainsi parle Nayuta, et nul n'en réchappera.",
-    "Les cornes de la fin se dressent déjà.",
-    "Nul n'échappera au crépuscule. MOURREZ TOUS.",
-    "Que les fleurs de la ruine recouvrent le ciel.",
-    "Le compte à rebours du monde continue.",
-  ];
-
-  const QUESTIONS = [
-    " Réponds, vermine.",
-    " Réponds, avant que le monde ne s'éteigne.",
-    " La fin attend ta réponse.",
-  ];
+  // Traduit un mot français en mot funeste. Le tirage est ancré sur le mot
+  // lui-même : un même mot donne toujours la même traduction — le dialecte
+  // a son dictionnaire, seul « Reformuler » (la variante) le rebat.
+  function traduire(mot, variante) {
+    const aleaMot = creerAlea(hacher(`${mot}§${variante}`));
+    return choisir(aleaMot, THEMES.get(mot) || VOCABULAIRE);
+  }
 
   /* ------------------------------------------------------------------ */
   /* Conversion                                                          */
   /* ------------------------------------------------------------------ */
 
-  function substituerLexique(texte, alea) {
-    return texte.replace(MOTIF_GLOBAL, (tout, avant, mot) => {
-      const variantes = PAR_MOTIF.get(mot.toLowerCase());
-      if (!variantes) return tout;
-      return avant + appliquerCasse(mot, choisir(alea, variantes));
-    });
-  }
-
-  function transformerPonctuation(texte, alea) {
-    return texte
-      .replace(/\s*!+/g, " !!! ☠")
-      .replace(/\s*\?+/g, () => " ?!" + choisir(alea, QUESTIONS));
-  }
-
-  // Met en majuscules un mot « long » de la phrase pour l'emphase du niveau 3.
-  function emphaseApocalyptique(texte, alea) {
-    const mots = texte.split(" ");
-    const candidats = mots
-      .map((mot, i) => ({ mot, i }))
-      .filter(({ mot }) => mot.replace(/[^A-Za-zÀ-ÖØ-öø-ÿŒœ]/gu, "").length >= 6);
-    if (candidats.length === 0) return texte;
-    const cible = choisir(alea, candidats);
-    mots[cible.i] = mots[cible.i].toUpperCase();
-    return mots.join(" ");
-  }
-
   function convertir(texteBrut, niveau, variante) {
-    // L'apostrophe typographique est ramenée à l'apostrophe droite pour que
-    // « aujourd’hui » et « s’il te plaît » soient reconnus par le lexique.
-    const texte = texteBrut.trim().replace(/’/g, "'");
-    const alea = creerAlea(hacher(`${texte} ${niveau} ${variante}`));
+    const texte = texteBrut.trim();
+    const alea = creerAlea(hacher(`${texte} ${niveau} ${variante}`));
 
-    // Niveau 1 : le lexique seul.
-    let corps = substituerLexique(texte, alea);
-    const segments = [];
+    let mots = extraireMots(texte).map((mot) => traduire(mot, variante));
 
-    // Niveau 2 : interjection d'ouverture, ponctuation funeste, aparté.
-    if (niveau >= 2) {
-      corps = transformerPonctuation(corps, alea);
-      if (alea() < 0.5) {
-        const virgules = corps.indexOf(", ");
-        if (virgules !== -1) {
-          corps =
-            corps.slice(0, virgules) + choisir(alea, APARTES) + corps.slice(virgules + 2);
-        }
+    // Une litanie digne de ce nom compte au moins trois mots.
+    while (mots.length < 3) mots.push(choisir(alea, VOCABULAIRE));
+
+    // Niveau 3 : des mots funestes surnuméraires s'invitent dans la litanie.
+    if (niveau >= 3) {
+      const enrichis = [];
+      for (const mot of mots) {
+        enrichis.push(mot);
+        if (alea() < 0.3) enrichis.push(choisir(alea, VOCABULAIRE));
       }
-      segments.push({ texte: choisir(alea, INTERJECTIONS) + " ", doom: true });
+      mots = enrichis;
     }
 
-    // Niveau 3 : emphase hurlée et sentence de ruine.
+    // Niveau 2+ : certains mots sont hurlés ; niveau 3 : ☠ s'accroche.
+    const objets = mots.map((mot) => {
+      let doom = false;
+      if (niveau >= 2 && alea() < (niveau >= 3 ? 0.45 : 0.25)) {
+        mot = mot.toUpperCase();
+        doom = true;
+      }
+      if (niveau >= 3 && alea() < 0.2) {
+        mot += " ☠";
+        doom = true;
+      }
+      return { mot, doom };
+    });
+
+    // Niveau 2+ : un ricanement ouvre parfois la litanie.
+    if (niveau >= 2 && alea() < 0.6) {
+      objets.unshift({ mot: "kekeke", doom: true });
+    }
+
+    // Niveau 3 : la sentence finale, hurlée, scelle la prophétie.
     if (niveau >= 3) {
-      corps = emphaseApocalyptique(corps, alea);
+      for (const mot of choisir(alea, FINALES)) {
+        objets.push({ mot, doom: true });
+      }
+      objets.push({ mot: "☠", doom: true });
     }
 
-    // La phrase du mortel, transfigurée.
-    if (!/[.!?…☠]\s*$/.test(corps)) corps += "…";
-    segments.push({ texte: corps, doom: false });
-
-    if (niveau >= 3) {
-      const prefixe = corps.endsWith("☠") ? " " : " ☠ ";
-      segments.push({ texte: prefixe + choisir(alea, SENTENCES_FINALES), doom: true });
-    }
+    const segments = objets.map((objet, i) => {
+      const dernier = i === objets.length - 1;
+      let texteSegment;
+      if (dernier) {
+        texteSegment = objet.mot === "☠" ? objet.mot : objet.mot + "…";
+      } else {
+        texteSegment = objet.mot + "… ";
+      }
+      return { texte: texteSegment, doom: objet.doom };
+    });
 
     return {
       texte: segments.map((s) => s.texte).join(""),
