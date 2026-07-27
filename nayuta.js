@@ -43,14 +43,17 @@ const Nayuta = (() => {
   /* Vocabulaire du dialecte                                             */
   /* ------------------------------------------------------------------ */
 
+  // Deux règles pour toute entrée ajoutée ici :
+  //   1. mot ou locution attestés en français — jamais de terme forgé ;
+  //   2. groupe nominal, jamais de proposition (un test le vérifie).
   const MOTS = [
     "abattoir", "abîme", "abysses", "agonie", "agonisant", "anéantissement",
     "apocalypse", "asphyxie", "asticots", "billot", "boucherie", "boyaux",
     "brasier", "bûcher", "cachot", "cadavre", "calcination", "calvaire",
     "carcasse", "carnage", "cataclysme", "catacombes", "cauchemar", "caveau",
     "cendres", "cercueil", "chaînes", "chair", "chairs", "chaos", "charnier",
-    "charognards", "charogne", "châtiment", "contagion",
-    "convulsions", "corbeaux", "cornes", "crâne", "crocs", "crypte", "curée",
+    "charognards", "charogne", "châtiment", "contagion", "convulsions",
+    "corbeaux", "cornes", "crâne", "crépuscule", "crocs", "crypte", "curée",
     "damnation", "décapitation", "décombres", "décomposition", "décrépitude",
     "déluge", "démence", "démon", "dépeçage", "dépouille", "désastre",
     "désolation", "douleur", "écartèlement", "échafaud", "échine", "écorché",
@@ -58,22 +61,23 @@ const Nayuta = (() => {
     "épidémie", "épouvante", "éventration", "éviscération", "excréments",
     "extermination", "extinction", "famine", "fange", "fantôme", "faucheuse",
     "fauve", "fémurs", "fers", "fléau", "folie", "fosse", "fournaise",
-    "fureur", "gangrène", "gémissement", "gibet", "glas", "gouffre", "goule",
-    "griffes", "gueule", "guillotine", "hécatombe", "hémorragie", "horreur",
-    "hurlement", "hyène", "immolation", "incendie", "lapidation", "larves",
-    "linceul", "mâchoire", "malédiction", "martyre", "massacre", "meurtre",
-    "meute", "miasme", "moelle", "moignons", "moisissure", "monstre",
-    "moribond", "mort", "mouroir", "mutilation", "naufrage", "néant",
-    "nécropole", "nécrose", "noyade", "noyé", "orbites", "ossements",
-    "ossuaire", "oubliettes", "pendu", "peste", "pestilence", "phalanges",
-    "plaie", "poison", "potence", "pourriture", "puanteur", "pus",
-    "putréfaction", "putrescence", "rage", "râle", "revenant", "ricanement",
-    "rictus", "ruine", "saignée", "saigneur", "sang", "sanie", "sarcophage",
-    "scorpion", "sépulcre", "serres", "sévices", "spasmes", "spectre",
-    "squelette", "strangulation", "suaire", "supplice", "supplicié",
-    "ténèbres", "terreur", "tombe", "tombeau", "torture", "tourment",
-    "trépas", "tripes", "tuerie", "vautour", "venin", "vermine",
-    "vermisseaux", "vertèbres", "vipère", "viscères",
+    "funérailles", "fureur", "gangrène", "gémissement", "gibet", "glas",
+    "gouffre", "goule", "griffes", "gueule", "guillotine", "hécatombe",
+    "hémorragie", "horreur", "hurlement", "hyène", "immolation", "incendie",
+    "jugement", "lamentation", "lapidation", "larves", "linceul", "mâchoire",
+    "malédiction", "martyre", "massacre", "mausolée", "meurtre", "meute",
+    "miasme", "moelle", "moignons", "moisissure", "monstre", "moribond",
+    "mort", "mouroir", "mutilation", "naufrage", "néant", "nécropole",
+    "nécrose", "noyade", "noyé", "orbites", "ossements", "ossuaire",
+    "oubliettes", "pendu", "peste", "pestilence", "phalanges", "plaie",
+    "poison", "potence", "pourriture", "présage", "puanteur", "pus",
+    "putréfaction", "putrescence", "rage", "râle", "requiem", "revenant",
+    "ricanement", "rictus", "ruine", "saignée", "saigneur", "sang", "sanglot",
+    "sanie", "sarcophage", "scorpion", "sépulcre", "serres", "sévices",
+    "spasmes", "spectre", "squelette", "stèle", "strangulation", "suaire",
+    "supplice", "supplicié", "ténèbres", "terreur", "thrène", "tombe",
+    "tombeau", "torture", "tourment", "trépas", "tripes", "tuerie", "vautour",
+    "venin", "vermine", "vermisseaux", "vertèbres", "vipère", "viscères",
   ];
 
   const LOCUTIONS = [
@@ -95,12 +99,13 @@ const Nayuta = (() => {
     "odeur de charnier", "odeur de sang", "ombre difforme", "orbites vides",
     "os à nu", "os brisés", "peau arrachée", "plaie béante",
     "pluie de cendres", "pluie de sang", "présage écarlate",
-    "procession de spectres", "râle d'agonie", "regard vide", "rire dément",
-    "sang caillé", "sang noir", "sanglot étouffé", "silence de mort",
-    "silence de tombe", "soif de sang", "soleil noir", "souffle putride",
-    "sourire édenté", "terre remuée", "tombe ouverte", "ultime râle",
-    "vautours affamés", "veillée mortuaire", "vent de peste", "ventre ouvert",
-    "viscères épars", "yeux crevés", "yeux vitreux",
+    "procession de spectres", "prophétie funeste", "râle d'agonie",
+    "regard vide", "rire dément", "sang caillé", "sang noir",
+    "sanglot étouffé", "silence de mort", "silence de tombe", "soif de sang",
+    "soleil noir", "souffle putride", "sourire édenté", "terre remuée",
+    "tombe ouverte", "ultime râle", "vautours affamés", "veillée mortuaire",
+    "vent de peste", "ventre ouvert", "viscères épars", "yeux crevés",
+    "yeux vitreux",
   ];
 
   /* ------------------------------------------------------------------ */
