@@ -82,20 +82,27 @@
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+
+  /* Le texte vit dans un bloc : les segments y sont de simples éléments en
+     ligne, qui passent donc à la ligne. Enfants directs du conteneur flex,
+     ils resteraient tous sur une seule ligne et déborderaient du cadre. */
+  #texte {
     font-size: clamp(1.1rem, 3.2vw, 1.45rem);
     line-height: 1.95;
     letter-spacing: 0.06rem;
     color: #e8d9d4;
+    overflow-wrap: break-word;
   }
 
-  #litanie .vide {
+  #texte .vide {
     color: var(--cendre);
     font-style: italic;
     font-size: 1rem;
     letter-spacing: normal;
   }
 
-  #litanie .doom {
+  #texte .doom {
     color: var(--sang-vif);
     text-shadow: 0 0 12px rgba(194, 43, 62, 0.4);
   }
@@ -179,7 +186,7 @@
 
   <main>
     <div id="litanie" aria-live="polite">
-      <span class="vide">La prophétie attend d'être prononcée…</span>
+      <p id="texte"><span class="vide">La prophétie attend d'être prononcée…</span></p>
     </div>
 
     <div class="actions">
@@ -198,31 +205,31 @@
 
 <script src="nayuta.js"></script>
 <script>
-  const litanie = document.getElementById("litanie");
+  const texte = document.getElementById("texte");
   const noteCopie = document.getElementById("note-copie");
 
   function prophetiser() {
     const resultat = Nayuta.generer();
-    litanie.textContent = "";
+    texte.textContent = "";
     // Les éléments hurlés sont marqués « doom » par le générateur.
     for (const segment of resultat.segments) {
       const span = document.createElement("span");
       span.textContent = segment.texte;
       if (segment.doom) span.className = "doom";
-      litanie.appendChild(span);
+      texte.appendChild(span);
     }
   }
 
   document.getElementById("prophetiser").addEventListener("click", prophetiser);
 
   document.getElementById("copier").addEventListener("click", async () => {
-    const texte = litanie.textContent;
-    if (!texte || texte.startsWith("La prophétie attend")) return;
+    const litanie = texte.textContent;
+    if (!litanie || litanie.startsWith("La prophétie attend")) return;
     try {
-      await navigator.clipboard.writeText(texte);
+      await navigator.clipboard.writeText(litanie);
     } catch {
       const zone = document.createElement("textarea");
-      zone.value = texte;
+      zone.value = litanie;
       document.body.appendChild(zone);
       zone.select();
       document.execCommand("copy");
