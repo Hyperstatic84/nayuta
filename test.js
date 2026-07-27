@@ -1,4 +1,4 @@
-/* Tests du moteur de conversion — `node test.js`. */
+/* Tests du générateur — `node test.js`. */
 
 const fs = require("fs");
 const Nayuta = require("./nayuta.js");
@@ -14,47 +14,88 @@ function verifier(nom, condition, detail) {
   }
 }
 
-// Les mots de la litanie, sans les « … » ni le ☠ final.
-function motsDe(texte) {
+// Les éléments de la litanie, sans les « … » ni le ☠ final.
+function elementsDe(texte) {
   return texte
     .replace(/ ☠$/, "")
     .split("… ")
-    .map((mot) => mot.replace(/…$/, ""));
+    .map((element) => element.replace(/…$/, ""));
 }
 
 console.log("Dialecte Macabre — tests\n");
 
-// Déterminisme : même entrée, même litanie.
+// À graine égale, litanie égale : les tests peuvent s'y fier.
 {
-  const a = Nayuta.convertir("Bonjour, veux-tu manger avec moi demain ?", 0);
-  const b = Nayuta.convertir("Bonjour, veux-tu manger avec moi demain ?", 0);
-  verifier("la conversion est déterministe", a.texte === b.texte);
+  verifier("la génération est déterministe à graine égale", Nayuta.generer(42).texte === Nayuta.generer(42).texte);
+  verifier("deux graines donnent deux litanies", Nayuta.generer(1).texte !== Nayuta.generer(2).texte);
 }
 
-// La variante change la litanie (reformuler).
+// Sans graine, chaque appel tire une nouvelle litanie.
 {
-  const a = Nayuta.convertir("Bonjour, veux-tu manger avec moi demain ?", 0);
-  const b = Nayuta.convertir("Bonjour, veux-tu manger avec moi demain ?", 1);
-  verifier("la variante produit une autre litanie", a.texte !== b.texte);
+  const tirages = new Set(Array.from({ length: 20 }, () => Nayuta.generer().texte));
+  verifier("sans graine, les litanies varient", tirages.size > 15, `${tirages.size} litanies distinctes sur 20`);
 }
 
-// Forme : une suite de mots ou de locutions séparés par « … », close par ☠.
+// Forme : une suite d'éléments séparés par « … », close par ☠.
 {
-  const r = Nayuta.convertir("Je vais à la maison demain !", 0).texte;
+  const r = Nayuta.generer(7).texte;
   verifier("la sortie est une suite d'éléments close par ☠", /^([^…]+… )+[^…]+… ☠$/u.test(r), r);
   verifier("aucune ponctuation de phrase ne subsiste", !/[,.!?;:]/.test(r), r);
+}
+
+// Longueur : jamais trop courte pour être une litanie, jamais interminable.
+{
+  let min = Infinity;
+  let max = 0;
+  for (let graine = 0; graine < 300; graine++) {
+    const n = elementsDe(Nayuta.generer(graine).texte).length;
+    min = Math.min(min, n);
+    max = Math.max(max, n);
+  }
+  verifier("la litanie compte de 4 à 9 éléments", min >= 4 && max <= 9, `de ${min} à ${max}`);
+}
+
+// Une litanie ne bégaie pas : jamais deux fois le même élément d'affilée.
+{
+  let begaiement = null;
+  for (let graine = 0; graine < 300 && !begaiement; graine++) {
+    const elements = elementsDe(Nayuta.generer(graine).texte).map((e) => e.toLowerCase());
+    const i = elements.findIndex((e, k) => k > 0 && e === elements[k - 1]);
+    if (i !== -1) begaiement = `graine ${graine} : ${elements[i]}`;
+  }
+  verifier("jamais deux fois le même élément d'affilée", begaiement === null, begaiement);
+}
+
+// Les deux fonds sont bien servis : mots isolés et locutions.
+{
+  let mots = 0;
+  let locutions = 0;
+  for (let graine = 0; graine < 200; graine++) {
+    for (const element of elementsDe(Nayuta.generer(graine).texte)) {
+      if (element.includes(" ")) locutions += 1;
+      else mots += 1;
+    }
+  }
+  verifier("les mots isolés dominent la litanie", mots > locutions, `${mots} mots / ${locutions} locutions`);
+  verifier("les locutions apparaissent bel et bien", locutions > 0, `${locutions} locutions`);
+}
+
+// Les éléments hurlés sont signalés à l'interface par le drapeau « doom ».
+{
+  const r = Nayuta.generer(11);
+  const coherent = r.segments
+    .filter((s) => s.texte.trim() !== "☠")
+    .every((s) => s.doom === (s.texte === s.texte.toUpperCase()));
+  verifier("le drapeau « doom » suit bien les éléments hurlés", coherent);
+  verifier("le ☠ final est funeste", r.segments[r.segments.length - 1].doom === true);
 }
 
 // Le vocabulaire admet les locutions (« gerbe de sang ») mais jamais de
 // proposition : pas de sujet, pas de verbe conjugué, rien qui fasse phrase.
 {
   const source = fs.readFileSync(require.resolve("./nayuta.js"), "utf8");
-  const bloc = source.slice(source.indexOf("const VOCABULAIRE"), source.indexOf("const MOTS_VIDES"));
-  // Seules les traductions produites sont concernées : une chaîne suivie de
-  // « : » est une clé, c'est-à-dire un mot français saisi par le mortel, qui a
-  // tout droit d'être conjugué. On les retire avant de collecter les valeurs.
-  const sansCles = bloc.replace(/"[^"]+"\s*:/g, "");
-  const entrees = (sansCles.match(/"[^"]+"/g) || []).map((s) => s.slice(1, -1));
+  const bloc = source.slice(source.indexOf("const MOTS = ["), source.indexOf("/* Génération"));
+  const entrees = (bloc.match(/"[^"]+"/g) || []).map((s) => s.slice(1, -1));
 
   // Ce qui transformerait un groupe nominal en proposition.
   const MARQUEURS_DE_PHRASE = new Set([
@@ -73,67 +114,9 @@ console.log("Dialecte Macabre — tests\n");
   });
   verifier("aucune entrée du vocabulaire ne forme une phrase", fautives.length === 0, fautives.join(" / "));
 
-  // Le thésaurus est vaste : une clé en double serait silencieusement écrasée.
-  const blocThemes = bloc.slice(bloc.indexOf("const THEMES"));
-  const cles = (blocThemes.match(/"([^"]+)"\s*:/g) || []).map((s) => s.replace(/"\s*:$/, "").slice(1));
-  const doublons = cles.filter((cle, i) => cles.indexOf(cle) !== i);
-  verifier("aucune clé du thésaurus n'est définie deux fois", doublons.length === 0, doublons.join(", "));
-}
-
-// Les locutions macabres arrivent bien jusqu'à la litanie.
-{
-  const r = Nayuta.convertir("sang", 0).texte.toLowerCase();
-  verifier("« sang » peut donner une locution entière", /(gerbe de sang|sang caillé|hémorragie)/.test(r), r);
-}
-
-// Les mots-outils sont écartés de la litanie.
-{
-  const r = Nayuta.convertir("viens avec moi dans la maison", 0).texte;
-  const mots = motsDe(r);
-  verifier(
-    "les mots-outils (avec, moi, dans, la) sont ignorés",
-    !mots.includes("avec") && !mots.includes("moi") && !mots.includes("dans") && !mots.includes("la"),
-    r
-  );
-}
-
-// Correspondance thématique : « manger » donne un mot du champ de la dévoration.
-{
-  const r = Nayuta.convertir("manger", 0).texte.toLowerCase();
-  verifier("« manger » est traduit dans son thème funeste", /(chair|festin|crocs)/.test(r), r);
-}
-
-// Dictionnaire cohérent : un même mot donne toujours la même traduction.
-{
-  const mots = motsDe(Nayuta.convertir("maison maison", 0).texte);
-  verifier("un même mot est toujours traduit pareil", mots[0].toLowerCase() === mots[1].toLowerCase(), mots.join(" "));
-}
-
-// Une litanie compte au moins trois mots, même si tout est mot-outil.
-{
-  const r = Nayuta.convertir("toi et moi", 0).texte;
-  verifier("au moins trois mots dans la litanie", motsDe(r).length >= 3, r);
-}
-
-// « veux-tu » : la partie porteuse de sens est traduite, le pronom écarté.
-{
-  const r = Nayuta.convertir("veux-tu venir", 0).texte.toLowerCase();
-  verifier("« veux-tu » livre le thème du désir", /(faim|exigence)/.test(r), r);
-}
-
-// L'apostrophe typographique est reconnue (« aujourd’hui »).
-{
-  const r = Nayuta.convertir("aujourd’hui", 0).texte.toLowerCase();
-  verifier("« aujourd’hui » est traduit comme un tout", /(agonie|sursis)/.test(r), r);
-}
-
-// Les mots hurlés sont signalés à l'interface par le drapeau « doom ».
-{
-  const r = Nayuta.convertir("Bonjour, veux-tu manger avec moi demain ?", 0);
-  const coherent = r.segments
-    .filter((s) => s.texte.trim() !== "☠")
-    .every((s) => s.doom === (s.texte === s.texte.toUpperCase()));
-  verifier("le drapeau « doom » suit bien les mots hurlés", coherent);
+  const doublons = entrees.filter((entree, i) => entrees.indexOf(entree) !== i);
+  verifier("aucune entrée du vocabulaire n'est répétée", doublons.length === 0, doublons.join(", "));
+  verifier("le vocabulaire reste fourni", entrees.length > 300, `${entrees.length} entrées`);
 }
 
 console.log(echecs === 0 ? "\nTous les tests passent. Le monde peut périr en paix." : `\n${echecs} test(s) en échec.`);
