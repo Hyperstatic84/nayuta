@@ -15,7 +15,7 @@ macabres, sans syntaxe.
 
 > **Vous :** Bonjour, veux-tu manger avec moi demain ?
 >
-> **Nayuta :** GLAS… faim… festin… jugement… ☠
+> **Nayuta :** chant du glas… EXIGENCE… CHAIR PUTRÉFIÉE… jugement… ☠
 
 ## Utilisation
 
@@ -31,16 +31,21 @@ installation, aucun réseau requis.
 
 Le moteur (`nayuta.js`) extrait les mots porteurs de sens de la phrase — les
 mots-outils (articles, pronoms, auxiliaires) sont ignorés, la grammaire étant
-une faiblesse de mortel — puis traduit chacun en mot funeste : par
+une faiblesse de mortel — puis traduit chacun en élément funeste : par
 correspondance thématique quand le concept est connu (« manger » → chair,
-festin, crocs), sinon par tirage déterministe dans le vocabulaire général.
-Un même mot français donne toujours la même traduction, comme un vrai
-dictionnaire ; seule la variante (« Reformuler ») rebat le tirage.
+festin, crocs, chair putréfiée), sinon par tirage déterministe dans le
+vocabulaire général. Un même mot français donne toujours la même traduction,
+comme un vrai dictionnaire ; seule la variante (« Reformuler ») rebat le
+tirage.
 
-Le vocabulaire ne contient que des mots isolés — aucune locution, aucun verbe
-conjugué — de sorte que rien ne peut se recoller en phrase, quelle que soit
-l'entrée. Un test le vérifie sur le fichier source. Quelques mots sont hurlés
-en majuscules : c'est le seul relief d'une litanie sans syntaxe.
+Le vocabulaire compte environ 180 mots isolés, une centaine de locutions
+macabres (« gerbe de sang », « mort subite », « décomposition putride ») et
+plus de 500 concepts français reconnus. Les locutions sont toutes des groupes
+nominaux : jamais de sujet ni de verbe conjugué, donc rien qui puisse se
+recoller en phrase. Un test veille sur cet invariant à même le fichier source,
+et vérifie au passage qu'aucune entrée du thésaurus n'est définie deux fois.
+Quelques éléments sont hurlés en majuscules : c'est le seul relief d'une
+litanie sans syntaxe.
 
 ## Tests
 

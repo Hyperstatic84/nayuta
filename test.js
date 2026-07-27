@@ -38,27 +38,52 @@ console.log("Dialecte Macabre — tests\n");
   verifier("la variante produit une autre litanie", a.texte !== b.texte);
 }
 
-// Forme : une suite de mots séparés par « … », close par ☠.
+// Forme : une suite de mots ou de locutions séparés par « … », close par ☠.
 {
   const r = Nayuta.convertir("Je vais à la maison demain !", 0).texte;
-  verifier("la sortie est une suite de mots close par ☠", /^([^\s…]+… )+[^\s…]+… ☠$/u.test(r), r);
+  verifier("la sortie est une suite d'éléments close par ☠", /^([^…]+… )+[^…]+… ☠$/u.test(r), r);
   verifier("aucune ponctuation de phrase ne subsiste", !/[,.!?;:]/.test(r), r);
 }
 
-// Jamais de phrase : chaque segment de la litanie est un mot isolé.
-{
-  const r = Nayuta.convertir("Bonjour, veux-tu manger avec moi demain ?", 0).texte;
-  verifier("chaque segment est un mot unique, jamais une locution", motsDe(r).every((mot) => !/\s/.test(mot)), r);
-}
-
-// Le vocabulaire lui-même ne contient aucune locution : rien ne peut se
-// recoller en phrase, quelle que soit l'entrée.
+// Le vocabulaire admet les locutions (« gerbe de sang ») mais jamais de
+// proposition : pas de sujet, pas de verbe conjugué, rien qui fasse phrase.
 {
   const source = fs.readFileSync(require.resolve("./nayuta.js"), "utf8");
   const bloc = source.slice(source.indexOf("const VOCABULAIRE"), source.indexOf("const MOTS_VIDES"));
-  const entrees = bloc.match(/"[^"]+"/g).map((s) => s.slice(1, -1));
-  const locutions = entrees.filter((mot) => /\s/.test(mot));
-  verifier("le vocabulaire ne contient que des mots isolés", locutions.length === 0, locutions.join(", "));
+  // Seules les traductions produites sont concernées : une chaîne suivie de
+  // « : » est une clé, c'est-à-dire un mot français saisi par le mortel, qui a
+  // tout droit d'être conjugué. On les retire avant de collecter les valeurs.
+  const sansCles = bloc.replace(/"[^"]+"\s*:/g, "");
+  const entrees = (sansCles.match(/"[^"]+"/g) || []).map((s) => s.slice(1, -1));
+
+  // Ce qui transformerait un groupe nominal en proposition.
+  const MARQUEURS_DE_PHRASE = new Set([
+    "je", "tu", "il", "elle", "on", "nous", "vous", "ils", "elles",
+    "est", "es", "suis", "sont", "sera", "seront", "était",
+    "a", "as", "ont", "aura", "auront", "avait",
+    "va", "vont", "vient", "viennent", "périra", "périront",
+    "meurs", "meurt", "meurent", "mourrez", "mourront", "tuez", "venez",
+  ]);
+
+  const fautives = entrees.filter((entree) => {
+    const mots = entree.split(" ");
+    if (mots.length > 3) return true;
+    if (/[.!?;:]/.test(entree)) return true;
+    return mots.some((mot) => MARQUEURS_DE_PHRASE.has(mot.toLowerCase()));
+  });
+  verifier("aucune entrée du vocabulaire ne forme une phrase", fautives.length === 0, fautives.join(" / "));
+
+  // Le thésaurus est vaste : une clé en double serait silencieusement écrasée.
+  const blocThemes = bloc.slice(bloc.indexOf("const THEMES"));
+  const cles = (blocThemes.match(/"([^"]+)"\s*:/g) || []).map((s) => s.replace(/"\s*:$/, "").slice(1));
+  const doublons = cles.filter((cle, i) => cles.indexOf(cle) !== i);
+  verifier("aucune clé du thésaurus n'est définie deux fois", doublons.length === 0, doublons.join(", "));
+}
+
+// Les locutions macabres arrivent bien jusqu'à la litanie.
+{
+  const r = Nayuta.convertir("sang", 0).texte.toLowerCase();
+  verifier("« sang » peut donner une locution entière", /(gerbe de sang|sang caillé|hémorragie)/.test(r), r);
 }
 
 // Les mots-outils sont écartés de la litanie.
