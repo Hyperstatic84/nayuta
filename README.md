@@ -26,7 +26,7 @@ répandre la ruine.
 ## Fonctionnement
 
 Le générateur (`nayuta.js`) tire de quatre à neuf éléments dans deux fonds :
-179 mots isolés et 92 locutions funestes (« gerbe de sang », « mort subite »,
+177 mots isolés et 91 locutions funestes (« gerbe de sang », « mort subite »,
 « décomposition putride »). La banque est délibérément resserrée sur le
 registre morbide et violent — décomposition, sépulture, supplices, chairs
 ouvertes, fléaux — sans terme tiède ni décoratif. Les locutions sortent environ
