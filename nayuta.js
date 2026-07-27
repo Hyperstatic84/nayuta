@@ -90,7 +90,7 @@ const Nayuta = (() => {
     "hurlement sourd", "lente putréfaction", "linceul souillé", "lune rouge",
     "mâchoire décrochée", "mare de sang", "marée de sang", "membres arrachés",
     "membres épars", "mer de cendres", "meute affamée", "monceau de cadavres",
-    "monde calciné", "morsure à l'os", "mort lente", "mort subite",
+    "monde calciné", "morsure profonde", "mort lente", "mort subite",
     "murmure d'outre-tombe", "nuée de mouches", "nuit sans fin",
     "odeur de charnier", "odeur de sang", "ombre difforme", "orbites vides",
     "os à nu", "os brisés", "peau arrachée", "plaie béante",
