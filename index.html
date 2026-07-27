@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La Prophétie de Nayuta — Dialecte Macabre</title>
+<style>
+  :root {
+    --noir: #0b0709;
+    --sang: #8f1d2c;
+    --sang-vif: #c22b3e;
+    --os: #d9cfc4;
+    --cendre: #7a6f6a;
+    --parchemin: #171012;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: radial-gradient(ellipse at 50% -20%, #2a1118 0%, var(--noir) 60%);
+    color: var(--os);
+    font-family: Georgia, "Times New Roman", serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2.5rem 1rem 4rem;
+  }
+
+  header { text-align: center; max-width: 44rem; }
+
+  .cornes {
+    font-size: 2.2rem;
+    letter-spacing: 0.5rem;
+    filter: drop-shadow(0 0 8px var(--sang-vif));
+  }
+
+  h1 {
+    font-size: clamp(1.6rem, 5vw, 2.6rem);
+    letter-spacing: 0.35rem;
+    text-transform: uppercase;
+    color: var(--sang-vif);
+    text-shadow: 0 0 18px rgba(194, 43, 62, 0.55);
+    margin: 0.6rem 0 0.2rem;
+  }
+
+  h2 {
+    font-size: clamp(0.9rem, 3vw, 1.15rem);
+    letter-spacing: 0.6rem;
+    text-transform: uppercase;
+    color: var(--cendre);
+    font-weight: normal;
+  }
+
+  .sous-titre {
+    margin-top: 1rem;
+    font-style: italic;
+    color: var(--cendre);
+    line-height: 1.5;
+  }
+
+  main {
+    width: 100%;
+    max-width: 44rem;
+    margin-top: 2.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.4rem;
+  }
+
+  .panneau {
+    background: var(--parchemin);
+    border: 1px solid #3a2228;
+    border-radius: 6px;
+    padding: 1.2rem;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.6) inset, 0 4px 24px rgba(0, 0, 0, 0.5);
+  }
+
+  label.titre-panneau {
+    display: block;
+    font-size: 0.78rem;
+    letter-spacing: 0.35rem;
+    text-transform: uppercase;
+    color: var(--cendre);
+    margin-bottom: 0.7rem;
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 7rem;
+    resize: vertical;
+    background: #0e0a0c;
+    color: var(--os);
+    border: 1px solid #33212a;
+    border-radius: 4px;
+    padding: 0.9rem;
+    font-family: inherit;
+    font-size: 1.05rem;
+    line-height: 1.55;
+  }
+
+  textarea:focus { outline: 1px solid var(--sang); }
+
+  .controles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .intensite { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+  .intensite button {
+    background: transparent;
+    border: 1px solid #4a2b33;
+    color: var(--cendre);
+    padding: 0.45rem 0.85rem;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 0.82rem;
+    letter-spacing: 0.12rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .intensite button.actif {
+    border-color: var(--sang-vif);
+    color: var(--sang-vif);
+    box-shadow: 0 0 12px rgba(194, 43, 62, 0.35);
+  }
+
+  .actions { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+
+  .actions button {
+    font-family: inherit;
+    cursor: pointer;
+    border-radius: 4px;
+    padding: 0.6rem 1.2rem;
+    font-size: 0.95rem;
+    letter-spacing: 0.15rem;
+    text-transform: uppercase;
+    transition: all 0.15s ease;
+  }
+
+  #convertir {
+    background: linear-gradient(180deg, var(--sang-vif), var(--sang));
+    color: #f5e9e9;
+    border: 1px solid #5c1420;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  }
+
+  #convertir:hover { filter: brightness(1.15); box-shadow: 0 0 18px rgba(194, 43, 62, 0.5); }
+
+  .secondaire {
+    background: transparent;
+    border: 1px solid #4a2b33;
+    color: var(--os);
+  }
+
+  .secondaire:hover { border-color: var(--sang-vif); color: var(--sang-vif); }
+
+  #sortie {
+    min-height: 7rem;
+    white-space: pre-wrap;
+    font-size: 1.15rem;
+    line-height: 1.7;
+    color: #e8d9d4;
+  }
+
+  #sortie .vide { color: var(--cendre); font-style: italic; font-size: 1rem; }
+
+  #sortie .doom { color: var(--sang-vif); }
+
+  .note-copie {
+    font-size: 0.8rem;
+    color: var(--sang-vif);
+    letter-spacing: 0.2rem;
+    text-transform: uppercase;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .note-copie.visible { opacity: 1; }
+
+  footer {
+    margin-top: 3rem;
+    text-align: center;
+    color: var(--cendre);
+    font-size: 0.85rem;
+    font-style: italic;
+    line-height: 1.7;
+    max-width: 40rem;
+  }
+
+  hr.separateur {
+    border: none;
+    border-top: 1px solid #33212a;
+    width: 8rem;
+    margin: 0 auto 1rem;
+  }
+</style>
+</head>
+<body>
+  <header>
+    <div class="cornes">☠ 👹 ☠</div>
+    <h1>La Prophétie de Nayuta</h1>
+    <h2>Dialecte Macabre</h2>
+    <p class="sous-titre">
+      Convertissez vos phrases dans le langage apocalyptique de Nayuta,
+      l'enfant cornue promise à la destruction du monde.
+    </p>
+  </header>
+
+  <main>
+    <section class="panneau">
+      <label class="titre-panneau" for="entree">Vos mots de simple mortel</label>
+      <textarea id="entree" placeholder="Écrivez une phrase… par exemple : « Bonjour, veux-tu manger avec moi demain ? »"></textarea>
+    </section>
+
+    <section class="panneau controles">
+      <div class="intensite" role="group" aria-label="Intensité de la malédiction">
+        <button type="button" data-niveau="1">I · Murmure</button>
+        <button type="button" data-niveau="2" class="actif">II · Malédiction</button>
+        <button type="button" data-niveau="3">III · Apocalypse</button>
+      </div>
+      <div class="actions">
+        <button type="button" id="convertir">Prophétiser</button>
+        <button type="button" id="reformuler" class="secondaire" title="Tirer une autre version de la prophétie">Reformuler</button>
+        <button type="button" id="copier" class="secondaire">Copier</button>
+      </div>
+    </section>
+
+    <section class="panneau">
+      <label class="titre-panneau" for="sortie">La parole de Nayuta</label>
+      <div id="sortie"><span class="vide">La prophétie attend vos mots…</span></div>
+      <span class="note-copie" id="note-copie">Prophétie copiée. Répandez la ruine.</span>
+    </section>
+  </main>
+
+  <footer>
+    <hr class="separateur">
+    D'après la nouvelle <em>« La Prophétie de Nayuta »</em> de Tatsuki Fujimoto
+    (anthologie <em>17-21</em>). Hommage de fan, sans affiliation officielle.<br>
+    « Le monde périra de la main de l'enfant cornue. » — du moins, c'est ce que dit la prophétie.
+  </footer>
+
+<script src="nayuta.js"></script>
+<script>
+  const entree = document.getElementById("entree");
+  const sortie = document.getElementById("sortie");
+  const noteCopie = document.getElementById("note-copie");
+  const boutonsNiveau = document.querySelectorAll(".intensite button");
+
+  let niveau = 2;
+  let variante = 0;
+
+  function afficher() {
+    const texte = entree.value.trim();
+    if (!texte) {
+      sortie.innerHTML = '<span class="vide">La prophétie attend vos mots…</span>';
+      return;
+    }
+    const resultat = Nayuta.convertir(texte, niveau, variante);
+    sortie.textContent = "";
+    // Met en évidence les segments « funestes » (marqués par l'engin de conversion)
+    for (const segment of resultat.segments) {
+      const span = document.createElement("span");
+      span.textContent = segment.texte;
+      if (segment.doom) span.className = "doom";
+      sortie.appendChild(span);
+    }
+  }
+
+  boutonsNiveau.forEach((b) => {
+    b.addEventListener("click", () => {
+      boutonsNiveau.forEach((x) => x.classList.remove("actif"));
+      b.classList.add("actif");
+      niveau = Number(b.dataset.niveau);
+      afficher();
+    });
+  });
+
+  document.getElementById("convertir").addEventListener("click", () => {
+    variante = 0;
+    afficher();
+  });
+
+  document.getElementById("reformuler").addEventListener("click", () => {
+    variante += 1;
+    afficher();
+  });
+
+  document.getElementById("copier").addEventListener("click", async () => {
+    const texte = sortie.textContent;
+    if (!texte || texte.startsWith("La prophétie attend")) return;
+    try {
+      await navigator.clipboard.writeText(texte);
+    } catch {
+      const zone = document.createElement("textarea");
+      zone.value = texte;
+      document.body.appendChild(zone);
+      zone.select();
+      document.execCommand("copy");
+      zone.remove();
+    }
+    noteCopie.classList.add("visible");
+    setTimeout(() => noteCopie.classList.remove("visible"), 1800);
+  });
+
+  entree.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+      variante = 0;
+      afficher();
+    }
+  });
+</script>
+</body>
+</html>
