@@ -10,13 +10,12 @@ D'après la nouvelle *« La Prophétie de Nayuta »* de Tatsuki Fujimoto
 Une petite application web, entièrement statique et sans dépendance, qui
 transfigure n'importe quelle phrase française ordinaire dans le parler funeste
 de Nayuta, l'enfant cornue promise à la destruction du monde. Fidèle à la
-version française : Nayuta ne construit pas de phrases — elle égrène une
-litanie de mots macabres, sans syntaxe.
+version française : Nayuta ne fait pas de phrases — elle égrène des mots
+macabres, sans syntaxe.
 
 > **Vous :** Bonjour, veux-tu manger avec moi demain ?
 >
-> **Nayuta :** kekeke… glas… ASTICOTS… FAIM ☠… CHAIR… jugement… MOURREZ…
-> TOUS… ☠
+> **Nayuta :** GLAS… faim… festin… jugement… ☠
 
 ## Utilisation
 
@@ -24,25 +23,24 @@ Ouvrez simplement `index.html` dans un navigateur — aucun serveur, aucune
 installation, aucun réseau requis.
 
 1. Écrivez votre phrase de simple mortel.
-2. Choisissez l'intensité de la malédiction :
-   - **I · Murmure** — litanie basse, tout en minuscules ;
-   - **II · Malédiction** — ricanement d'ouverture, mots hurlés en majuscules ;
-   - **III · Apocalypse** — mots funestes surnuméraires, ☠, sentence finale
-     (« MOURREZ… TOUS… »).
-3. Cliquez sur **Prophétiser** (ou `Ctrl`/`Cmd` + `Entrée`).
-4. **Reformuler** tire une autre version de la même prophétie ;
+2. Cliquez sur **Prophétiser** (ou `Ctrl`/`Cmd` + `Entrée`).
+3. **Reformuler** tire une autre litanie de la même phrase ;
    **Copier** l'envoie dans le presse-papiers pour répandre la ruine.
 
 ## Fonctionnement
 
 Le moteur (`nayuta.js`) extrait les mots porteurs de sens de la phrase — les
-mots-outils (articles, pronoms…) sont ignorés — puis traduit chacun en mot
-funeste : par correspondance thématique quand le concept est connu (« manger »
-→ dévorer, chair, festin), sinon par tirage déterministe dans le vocabulaire
-général. Un même mot français donne toujours la même traduction, comme un
-vrai dictionnaire ; seule la variante (« Reformuler ») rebat le tirage. Le
-résultat est déterministe : même phrase, même niveau, même variante — même
-litanie, comme il sied à une prophétie.
+mots-outils (articles, pronoms, auxiliaires) sont ignorés, la grammaire étant
+une faiblesse de mortel — puis traduit chacun en mot funeste : par
+correspondance thématique quand le concept est connu (« manger » → chair,
+festin, crocs), sinon par tirage déterministe dans le vocabulaire général.
+Un même mot français donne toujours la même traduction, comme un vrai
+dictionnaire ; seule la variante (« Reformuler ») rebat le tirage.
+
+Le vocabulaire ne contient que des mots isolés — aucune locution, aucun verbe
+conjugué — de sorte que rien ne peut se recoller en phrase, quelle que soit
+l'entrée. Un test le vérifie sur le fichier source. Quelques mots sont hurlés
+en majuscules : c'est le seul relief d'une litanie sans syntaxe.
 
 ## Tests
 

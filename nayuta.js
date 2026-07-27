@@ -3,11 +3,11 @@
  *
  * Transfigure une phrase française ordinaire dans le parler de Nayuta,
  * l'enfant cornue de la nouvelle « La Prophétie de Nayuta » de Tatsuki
- * Fujimoto. Fidèle à la version française : Nayuta ne construit pas de
- * phrases — elle égrène une litanie de mots macabres, sans syntaxe.
+ * Fujimoto. Nayuta ne construit pas de phrases : elle égrène une suite de
+ * mots macabres, sans syntaxe et sans sentence.
  *
  *   « Bonjour, veux-tu manger avec moi demain ? »
- *   → « ténèbres… faim… chair… jugement… »
+ *   → « glas… faim… CHAIR… jugement… ☠ »
  *
  * Chaque mot porteur de sens de la phrase d'origine est traduit vers un mot
  * funeste : par correspondance thématique quand le concept est connu, sinon
@@ -16,13 +16,8 @@
  * dictionnaire. Les mots-outils (articles, pronoms…) sont ignorés : la
  * grammaire est une faiblesse de mortel.
  *
- * La conversion est déterministe : même phrase, même niveau, même variante
- * produisent la même litanie. « Reformuler » incrémente la variante.
- *
- * Niveaux d'intensité :
- *   1 — Murmure      : litanie basse, tout en minuscules.
- *   2 — Malédiction  : ricanement d'ouverture, mots hurlés en majuscules.
- *   3 — Apocalypse   : mots funestes surnuméraires, ☠, sentence finale.
+ * La conversion est déterministe : une même phrase donne toujours la même
+ * litanie. « Reformuler » incrémente la variante pour en tirer une autre.
  */
 
 const Nayuta = (() => {
@@ -62,6 +57,9 @@ const Nayuta = (() => {
   /* Vocabulaire du dialecte                                             */
   /* ------------------------------------------------------------------ */
 
+  // Tout le vocabulaire tient en mots isolés : aucune locution, aucun verbe
+  // conjugué, rien qui puisse se recoller en phrase.
+
   // Fonds général : les mots inconnus du thésaurus y puisent leur traduction.
   const VOCABULAIRE = [
     "mort", "sang", "cadavre", "ténèbres", "ruine", "cendre", "ossements",
@@ -86,9 +84,9 @@ const Nayuta = (() => {
     "revoir": ["adieux", "néant"],
     "oui": ["fatalité", "soumission"],
     "non": ["refus", "néant"],
-    "manger": ["dévorer", "chair", "festin"], "mange": ["dévorer", "chair", "festin"],
-    "mangé": ["dévorer", "chair", "festin"], "nourriture": ["chair", "festin"],
-    "faim": ["dévorer", "famine"], "repas": ["festin", "chair"],
+    "manger": ["chair", "festin", "crocs"], "mange": ["chair", "festin", "crocs"],
+    "mangé": ["chair", "festin", "crocs"], "nourriture": ["chair", "festin"],
+    "faim": ["faim", "famine"], "repas": ["festin", "chair"],
     "boire": ["sang", "fiel"], "bois": ["sang", "fiel"], "soif": ["sang", "fiel"],
     "maison": ["crypte", "tombeau", "tanière"], "chez": ["crypte", "tanière"],
     "école": ["purgatoire", "limbes"],
@@ -136,8 +134,8 @@ const Nayuta = (() => {
     "veux": ["faim", "exigence"], "veut": ["faim", "exigence"],
     "voudrais": ["faim", "exigence"], "envie": ["faim", "exigence"],
     "désir": ["faim", "exigence"],
-    "dors": ["gésir", "limbes"], "dormir": ["gésir", "limbes"],
-    "dodo": ["gésir", "limbes"], "sommeil": ["limbes", "cauchemar"],
+    "dors": ["limbes", "cauchemar"], "dormir": ["limbes", "cauchemar"],
+    "dodo": ["limbes", "cauchemar"], "sommeil": ["limbes", "cauchemar"],
     "rêve": ["cauchemar", "limbes"], "rêves": ["cauchemars", "limbes"],
     "demain": ["jugement", "échéance"], "futur": ["jugement", "échéance"],
     "avenir": ["jugement", "échéance"],
@@ -190,14 +188,6 @@ const Nayuta = (() => {
     "tout", "tous", "toute", "toutes", "autre", "autres", "même", "encore",
   ]);
 
-  // Sentences finales du niveau Apocalypse — toujours hurlées.
-  const FINALES = [
-    ["MOURREZ", "TOUS"],
-    ["MORT", "MORT", "MORT"],
-    ["LA FIN", "VIENT"],
-    ["LE MONDE", "PÉRIRA"],
-  ];
-
   /* ------------------------------------------------------------------ */
   /* Découpage et traduction                                             */
   /* ------------------------------------------------------------------ */
@@ -235,62 +225,26 @@ const Nayuta = (() => {
   /* Conversion                                                          */
   /* ------------------------------------------------------------------ */
 
-  function convertir(texteBrut, niveau, variante) {
+  function convertir(texteBrut, variante) {
     const texte = texteBrut.trim();
-    const alea = creerAlea(hacher(`${texte} ${niveau} ${variante}`));
+    const alea = creerAlea(hacher(`${texte}§${variante}`));
 
-    let mots = extraireMots(texte).map((mot) => traduire(mot, variante));
+    const mots = extraireMots(texte).map((mot) => traduire(mot, variante));
 
     // Une litanie digne de ce nom compte au moins trois mots.
     while (mots.length < 3) mots.push(choisir(alea, VOCABULAIRE));
 
-    // Niveau 3 : des mots funestes surnuméraires s'invitent dans la litanie.
-    if (niveau >= 3) {
-      const enrichis = [];
-      for (const mot of mots) {
-        enrichis.push(mot);
-        if (alea() < 0.3) enrichis.push(choisir(alea, VOCABULAIRE));
-      }
-      mots = enrichis;
-    }
-
-    // Niveau 2+ : certains mots sont hurlés ; niveau 3 : ☠ s'accroche.
-    const objets = mots.map((mot) => {
-      let doom = false;
-      if (niveau >= 2 && alea() < (niveau >= 3 ? 0.45 : 0.25)) {
-        mot = mot.toUpperCase();
-        doom = true;
-      }
-      if (niveau >= 3 && alea() < 0.2) {
-        mot += " ☠";
-        doom = true;
-      }
-      return { mot, doom };
+    // Certains mots sont hurlés — le seul relief d'une litanie sans syntaxe.
+    const segments = mots.map((mot, i) => {
+      const hurle = alea() < 0.3;
+      const dernier = i === mots.length - 1;
+      return {
+        texte: (hurle ? mot.toUpperCase() : mot) + "…" + (dernier ? "" : " "),
+        doom: hurle,
+      };
     });
 
-    // Niveau 2+ : un ricanement ouvre parfois la litanie.
-    if (niveau >= 2 && alea() < 0.6) {
-      objets.unshift({ mot: "kekeke", doom: true });
-    }
-
-    // Niveau 3 : la sentence finale, hurlée, scelle la prophétie.
-    if (niveau >= 3) {
-      for (const mot of choisir(alea, FINALES)) {
-        objets.push({ mot, doom: true });
-      }
-      objets.push({ mot: "☠", doom: true });
-    }
-
-    const segments = objets.map((objet, i) => {
-      const dernier = i === objets.length - 1;
-      let texteSegment;
-      if (dernier) {
-        texteSegment = objet.mot === "☠" ? objet.mot : objet.mot + "…";
-      } else {
-        texteSegment = objet.mot + "… ";
-      }
-      return { texte: texteSegment, doom: objet.doom };
-    });
+    segments.push({ texte: " ☠", doom: true });
 
     return {
       texte: segments.map((s) => s.texte).join(""),

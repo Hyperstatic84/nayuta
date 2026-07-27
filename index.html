@@ -101,37 +101,12 @@
 
   textarea:focus { outline: 1px solid var(--sang); }
 
-  .controles {
+  .actions {
     display: flex;
+    gap: 0.6rem;
     flex-wrap: wrap;
-    gap: 0.8rem;
     align-items: center;
-    justify-content: space-between;
   }
-
-  .intensite { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-
-  .intensite button {
-    background: transparent;
-    border: 1px solid #4a2b33;
-    color: var(--cendre);
-    padding: 0.45rem 0.85rem;
-    border-radius: 4px;
-    font-family: inherit;
-    font-size: 0.82rem;
-    letter-spacing: 0.12rem;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: all 0.15s ease;
-  }
-
-  .intensite button.actif {
-    border-color: var(--sang-vif);
-    color: var(--sang-vif);
-    box-shadow: 0 0 12px rgba(194, 43, 62, 0.35);
-  }
-
-  .actions { display: flex; gap: 0.6rem; flex-wrap: wrap; }
 
   .actions button {
     font-family: inherit;
@@ -164,14 +139,23 @@
   #sortie {
     min-height: 7rem;
     white-space: pre-wrap;
-    font-size: 1.15rem;
-    line-height: 1.7;
+    font-size: 1.3rem;
+    line-height: 1.9;
+    letter-spacing: 0.06rem;
     color: #e8d9d4;
   }
 
-  #sortie .vide { color: var(--cendre); font-style: italic; font-size: 1rem; }
+  #sortie .vide {
+    color: var(--cendre);
+    font-style: italic;
+    font-size: 1rem;
+    letter-spacing: normal;
+  }
 
-  #sortie .doom { color: var(--sang-vif); }
+  #sortie .doom {
+    color: var(--sang-vif);
+    text-shadow: 0 0 12px rgba(194, 43, 62, 0.4);
+  }
 
   .note-copie {
     font-size: 0.8rem;
@@ -209,8 +193,8 @@
     <h2>Dialecte Macabre</h2>
     <p class="sous-titre">
       Convertissez vos phrases dans le langage apocalyptique de Nayuta,
-      l'enfant cornue promise à la destruction du monde — une litanie de
-      mots macabres, sans phrases : la grammaire est une faiblesse de mortel.
+      l'enfant cornue promise à la destruction du monde. Elle ne fait pas de
+      phrases — elle égrène les mots.
     </p>
   </header>
 
@@ -220,17 +204,10 @@
       <textarea id="entree" placeholder="Écrivez une phrase… par exemple : « Bonjour, veux-tu manger avec moi demain ? »"></textarea>
     </section>
 
-    <section class="panneau controles">
-      <div class="intensite" role="group" aria-label="Intensité de la malédiction">
-        <button type="button" data-niveau="1">I · Murmure</button>
-        <button type="button" data-niveau="2" class="actif">II · Malédiction</button>
-        <button type="button" data-niveau="3">III · Apocalypse</button>
-      </div>
-      <div class="actions">
-        <button type="button" id="convertir">Prophétiser</button>
-        <button type="button" id="reformuler" class="secondaire" title="Tirer une autre version de la prophétie">Reformuler</button>
-        <button type="button" id="copier" class="secondaire">Copier</button>
-      </div>
+    <section class="panneau actions">
+      <button type="button" id="convertir">Prophétiser</button>
+      <button type="button" id="reformuler" class="secondaire" title="Tirer une autre litanie">Reformuler</button>
+      <button type="button" id="copier" class="secondaire">Copier</button>
     </section>
 
     <section class="panneau">
@@ -252,9 +229,7 @@
   const entree = document.getElementById("entree");
   const sortie = document.getElementById("sortie");
   const noteCopie = document.getElementById("note-copie");
-  const boutonsNiveau = document.querySelectorAll(".intensite button");
 
-  let niveau = 2;
   let variante = 0;
 
   function afficher() {
@@ -263,9 +238,9 @@
       sortie.innerHTML = '<span class="vide">La prophétie attend vos mots…</span>';
       return;
     }
-    const resultat = Nayuta.convertir(texte, niveau, variante);
+    const resultat = Nayuta.convertir(texte, variante);
     sortie.textContent = "";
-    // Met en évidence les segments « funestes » (marqués par l'engin de conversion)
+    // Les mots hurlés sont marqués « doom » par le moteur.
     for (const segment of resultat.segments) {
       const span = document.createElement("span");
       span.textContent = segment.texte;
@@ -273,15 +248,6 @@
       sortie.appendChild(span);
     }
   }
-
-  boutonsNiveau.forEach((b) => {
-    b.addEventListener("click", () => {
-      boutonsNiveau.forEach((x) => x.classList.remove("actif"));
-      b.classList.add("actif");
-      niveau = Number(b.dataset.niveau);
-      afficher();
-    });
-  });
 
   document.getElementById("convertir").addEventListener("click", () => {
     variante = 0;
