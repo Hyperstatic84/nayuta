@@ -9,13 +9,14 @@ D'après la nouvelle *« La Prophétie de Nayuta »* de Tatsuki Fujimoto
 
 Une petite application web, entièrement statique et sans dépendance, qui
 transfigure n'importe quelle phrase française ordinaire dans le parler funeste
-de Nayuta, l'enfant cornue promise à la destruction du monde.
+de Nayuta, l'enfant cornue promise à la destruction du monde. Fidèle à la
+version française : Nayuta ne construit pas de phrases — elle égrène une
+litanie de mots macabres, sans syntaxe.
 
 > **Vous :** Bonjour, veux-tu manger avec moi demain ?
 >
-> **Nayuta :** Tremble, vermine : Salutations, futur cadavre, VEUX-TU dévorer
-> avec moi quand le monde aura encore pourri d'un jour ?! Réponds, vermine.
-> ☠ Et le monde périra.
+> **Nayuta :** kekeke… glas… ASTICOTS… FAIM ☠… CHAIR… jugement… MOURREZ…
+> TOUS… ☠
 
 ## Utilisation
 
@@ -24,21 +25,24 @@ installation, aucun réseau requis.
 
 1. Écrivez votre phrase de simple mortel.
 2. Choisissez l'intensité de la malédiction :
-   - **I · Murmure** — substitutions lexicales seulement ;
-   - **II · Malédiction** — interjections, ponctuation funeste, apartés ;
-   - **III · Apocalypse** — emphase hurlée, sentence finale de ruine, ☠.
+   - **I · Murmure** — litanie basse, tout en minuscules ;
+   - **II · Malédiction** — ricanement d'ouverture, mots hurlés en majuscules ;
+   - **III · Apocalypse** — mots funestes surnuméraires, ☠, sentence finale
+     (« MOURREZ… TOUS… »).
 3. Cliquez sur **Prophétiser** (ou `Ctrl`/`Cmd` + `Entrée`).
 4. **Reformuler** tire une autre version de la même prophétie ;
    **Copier** l'envoie dans le presse-papiers pour répandre la ruine.
 
 ## Fonctionnement
 
-Le moteur (`nayuta.js`) applique en une seule passe un lexique d'une centaine
-d'expressions macabres (bornes de mots compatibles avec les accents et les
-inversions à trait d'union), puis ajoute interjections, apartés et sentences
-selon le niveau choisi. Le tirage est déterministe : une même phrase, au même
-niveau et à la même variante, produit toujours la même prophétie — comme il
-sied à une prophétie.
+Le moteur (`nayuta.js`) extrait les mots porteurs de sens de la phrase — les
+mots-outils (articles, pronoms…) sont ignorés — puis traduit chacun en mot
+funeste : par correspondance thématique quand le concept est connu (« manger »
+→ dévorer, chair, festin), sinon par tirage déterministe dans le vocabulaire
+général. Un même mot français donne toujours la même traduction, comme un
+vrai dictionnaire ; seule la variante (« Reformuler ») rebat le tirage. Le
+résultat est déterministe : même phrase, même niveau, même variante — même
+litanie, comme il sied à une prophétie.
 
 ## Tests
 
