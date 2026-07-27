@@ -26,9 +26,11 @@ répandre la ruine.
 ## Fonctionnement
 
 Le générateur (`nayuta.js`) tire de quatre à neuf éléments dans deux fonds :
-environ 290 mots isolés et près de 80 locutions funestes (« gerbe de sang »,
-« mort subite », « décomposition putride »). Les locutions sortent environ une
-fois sur trois — assez pour donner du relief, pas assez pour noyer les mots
+179 mots isolés et 92 locutions funestes (« gerbe de sang », « mort subite »,
+« décomposition putride »). La banque est délibérément resserrée sur le
+registre morbide et violent — décomposition, sépulture, supplices, chairs
+ouvertes, fléaux — sans terme tiède ni décoratif. Les locutions sortent environ
+une fois sur trois : assez pour donner du relief, pas assez pour noyer les mots
 isolés qui font le rythme. Un même élément ne sort jamais deux fois d'affilée,
 et quelques-uns sont hurlés en majuscules : c'est le seul relief d'une litanie
 sans syntaxe.

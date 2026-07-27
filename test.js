@@ -116,7 +116,9 @@ console.log("Dialecte Macabre — tests\n");
 
   const doublons = entrees.filter((entree, i) => entrees.indexOf(entree) !== i);
   verifier("aucune entrée du vocabulaire n'est répétée", doublons.length === 0, doublons.join(", "));
-  verifier("le vocabulaire reste fourni", entrees.length > 300, `${entrees.length} entrées`);
+  // Plancher de sécurité contre une banque vidée par mégarde, pas un objectif :
+  // l'élagage vers les seuls termes morbides est délibéré.
+  verifier("la banque de mots n'a pas été vidée", entrees.length > 200, `${entrees.length} entrées`);
 }
 
 console.log(echecs === 0 ? "\nTous les tests passent. Le monde peut périr en paix." : `\n${echecs} test(s) en échec.`);
